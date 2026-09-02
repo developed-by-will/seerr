@@ -13,9 +13,7 @@ import type { EntitySubscriberInterface, InsertEvent } from 'typeorm';
 import { EventSubscriber } from 'typeorm';
 
 @EventSubscriber()
-export class IssueCommentSubscriber
-  implements EntitySubscriberInterface<IssueComment>
-{
+export class IssueCommentSubscriber implements EntitySubscriberInterface<IssueComment> {
   public listenTo(): typeof IssueComment {
     return IssueComment;
   }
@@ -29,7 +27,7 @@ export class IssueCommentSubscriber
       const issue = (
         await getRepository(IssueComment).findOneOrFail({
           where: { id: entity.id },
-          relations: { issue: true },
+          relations: { issue: { createdBy: true } },
         })
       ).issue;
 

@@ -5,6 +5,7 @@ import useDiscover from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
+import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
 import type { TvResult } from '@server/models/Search';
 import type { TvDetails } from '@server/models/Tv';
@@ -39,13 +40,13 @@ const TvSimilar = () => {
   });
 
   if (error) {
-    return <Error statusCode={500} />;
+    return <ErrorPage statusCode={500} />;
   }
 
   return (
     <>
       <PageTitle title={[intl.formatMessage(messages.similar), tvData?.name]} />
-      <div className="mt-1 mb-5">
+      <div className="mb-5 mt-1">
         <Header
           subtext={
             <Link href={`/tv/${tvData?.id}`} className="hover:underline">

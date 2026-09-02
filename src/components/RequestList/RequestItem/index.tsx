@@ -1,3 +1,4 @@
+import Spinner from '@app/assets/spinner.svg';
 import Badge from '@app/components/Common/Badge';
 import Button from '@app/components/Common/Button';
 import CachedImage from '@app/components/Common/CachedImage';
@@ -5,7 +6,7 @@ import ConfirmButton from '@app/components/Common/ConfirmButton';
 import RequestModal from '@app/components/RequestModal';
 import StatusBadge from '@app/components/StatusBadge';
 import useDeepLinks from '@app/hooks/useDeepLinks';
-import useSettings from '@app/hooks/useSettings';
+import useToasts from '@app/hooks/useToasts';
 import { Permission, useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
 import defineMessages from '@app/utils/defineMessages';
@@ -28,12 +29,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { FormattedRelativeTime, useIntl } from 'react-intl';
-import { useToasts } from 'react-toast-notifications';
 import useSWR, { mutate } from 'swr';
 
 const messages = defineMessages('components.RequestList.RequestItem', {
   seasons: '{seasonCount, plural, one {Season} other {Seasons}}',
   failedretry: 'Something went wrong while retrying the request.',
+  failedmodify: 'Something went wrong while modifying the request.',
   requested: 'Requested',
   requesteddate: 'Requested',
   modified: 'Modified',
@@ -46,6 +47,7 @@ const messages = defineMessages('components.RequestList.RequestItem', {
   tvdbid: 'TheTVDB ID',
   unknowntitle: 'Unknown Title',
   removearr: 'Remove from {arr}',
+  removemediaerror: 'Something went wrong while removing the media.',
   profileName: 'Profile',
 });
 
@@ -116,7 +118,7 @@ const RequestItemError = ({
             </>
           )}
         </div>
-        <div className="mt-4 ml-4 flex w-full flex-col justify-center overflow-hidden pr-4 text-sm sm:ml-2 sm:mt-0 xl:flex-1 xl:pr-0">
+        <div className="ml-4 mt-4 flex w-full flex-col justify-center overflow-hidden pr-4 text-sm sm:ml-2 sm:mt-0 xl:flex-1 xl:pr-0">
           {requestData && (
             <>
               <div className="card-field">
@@ -295,7 +297,6 @@ interface RequestItemProps {
 }
 
 const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
-  const settings = useSettings();
   const { ref, inView } = useInView({
     triggerOnce: true,
   });
@@ -324,13 +325,24 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
   });
 
   const [isRetrying, setRetrying] = useState(false);
+  const [updatingType, setUpdatingType] = useState<
+    'approve' | 'decline' | null
+  >(null);
 
   const modifyRequest = async (type: 'approve' | 'decline') => {
-    const response = await axios.post(`/api/v1/request/${request.id}/${type}`);
-
-    if (response) {
+    setUpdatingType(type);
+    try {
+      await axios.post(`/api/v1/request/${request.id}/${type}`);
       revalidate();
+      revalidateList();
       mutate('/api/v1/request/count');
+    } catch {
+      addToast(intl.formatMessage(messages.failedmodify), {
+        autoDismiss: true,
+        appearance: 'error',
+      });
+    } finally {
+      setUpdatingType(null);
     }
   };
 
@@ -343,10 +355,20 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
 
   const deleteMediaFile = async () => {
     if (request.media) {
-      await axios.delete(
-        `/api/v1/media/${request.media.id}/file?is4k=${request.is4k}`
-      );
-      await axios.delete(`/api/v1/media/${request.media.id}`);
+      try {
+        await axios.delete(
+          `/api/v1/media/${request.media.id}/file?is4k=${request.is4k}`
+        );
+      } catch (e) {
+        if (!axios.isAxiosError(e) || e.response?.status !== 404) {
+          addToast(intl.formatMessage(messages.removemediaerror), {
+            autoDismiss: true,
+            appearance: 'error',
+          });
+          revalidateList();
+          return;
+        }
+      }
       revalidateList();
     }
   };
@@ -357,7 +379,7 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
     try {
       const result = await axios.post(`/api/v1/request/${request.id}/retry`);
       revalidate(result.data);
-    } catch (e) {
+    } catch {
       addToast(intl.formatMessage(messages.failedretry), {
         autoDismiss: true,
         appearance: 'error',
@@ -470,14 +492,7 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                 <div className="card-field">
                   <span className="card-field-name">
                     {intl.formatMessage(messages.seasons, {
-                      seasonCount:
-                        (settings.currentSettings.enableSpecialEpisodes
-                          ? title.seasons.length
-                          : title.seasons.filter(
-                              (season) => season.seasonNumber !== 0
-                            ).length) === request.seasons.length
-                          ? 0
-                          : request.seasons.length,
+                      seasonCount: request.seasons.length,
                     })}
                   </span>
                   <div className="hide-scrollbar flex flex-nowrap overflow-x-scroll">
@@ -495,7 +510,7 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
               )}
             </div>
           </div>
-          <div className="z-10 mt-4 ml-4 flex w-full flex-col justify-center gap-1 overflow-hidden pr-4 text-sm sm:ml-2 sm:mt-0 xl:flex-1 xl:pr-0">
+          <div className="z-10 ml-4 mt-4 flex w-full flex-col justify-center gap-1 overflow-hidden pr-4 text-sm sm:ml-2 sm:mt-0 xl:flex-1 xl:pr-0">
             <div className="card-field">
               <span className="card-field-name">
                 {intl.formatMessage(globalMessages.status)}
@@ -723,8 +738,9 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                     className="w-full"
                     buttonType="success"
                     onClick={() => modifyRequest('approve')}
+                    disabled={updatingType !== null}
                   >
-                    <CheckIcon />
+                    {updatingType === 'approve' ? <Spinner /> : <CheckIcon />}
                     <span>{intl.formatMessage(globalMessages.approve)}</span>
                   </Button>
                 </span>
@@ -733,8 +749,9 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                     className="w-full"
                     buttonType="danger"
                     onClick={() => modifyRequest('decline')}
+                    disabled={updatingType !== null}
                   >
-                    <XMarkIcon />
+                    {updatingType === 'decline' ? <Spinner /> : <XMarkIcon />}
                     <span>{intl.formatMessage(globalMessages.decline)}</span>
                   </Button>
                 </span>
@@ -750,6 +767,7 @@ const RequestItem = ({ request, revalidateList }: RequestItemProps) => {
                   className="w-full"
                   buttonType="primary"
                   onClick={() => setShowEditModal(true)}
+                  disabled={updatingType !== null}
                 >
                   <PencilIcon />
                   <span>{intl.formatMessage(messages.editrequest)}</span>

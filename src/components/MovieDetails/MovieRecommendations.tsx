@@ -5,6 +5,7 @@ import useDiscover from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
+import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
 import type { MovieDetails } from '@server/models/Movie';
 import type { MovieResult } from '@server/models/Search';
@@ -43,7 +44,7 @@ const MovieRecommendations = () => {
   });
 
   if (error) {
-    return <Error statusCode={500} />;
+    return <ErrorPage statusCode={500} />;
   }
 
   return (
@@ -51,7 +52,7 @@ const MovieRecommendations = () => {
       <PageTitle
         title={[intl.formatMessage(messages.recommendations), movieData?.title]}
       />
-      <div className="mt-1 mb-5">
+      <div className="mb-5 mt-1">
         <Header
           subtext={
             <Link href={`/movie/${movieData?.id}`} className="hover:underline">

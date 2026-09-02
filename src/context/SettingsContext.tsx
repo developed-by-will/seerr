@@ -13,7 +13,7 @@ const defaultSettings = {
   applicationTitle: 'Seerr',
   applicationUrl: '',
   hideAvailable: false,
-  hideBlacklisted: false,
+  hideBlocklisted: false,
   localLogin: true,
   mediaServerLogin: true,
   movie4kEnabled: false,
@@ -31,6 +31,8 @@ const defaultSettings = {
   emailEnabled: false,
   newPlexLogin: true,
   youtubeUrl: '',
+  versionCheck: true,
+  plexClientIdentifier: '',
 };
 
 export const SettingsContext = React.createContext<SettingsContextProps>({

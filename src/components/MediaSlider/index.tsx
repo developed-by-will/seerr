@@ -74,14 +74,21 @@ const MediaSlider = ({
         (t.mediaType === 'movie' || t.mediaType === 'tv') &&
         t.mediaInfo?.status !== MediaStatus.AVAILABLE &&
         t.mediaInfo?.status !== MediaStatus.PARTIALLY_AVAILABLE
+      (i) =>
+        !(i.mediaType === 'movie' || i.mediaType === 'tv') ||
+        (i.mediaInfo?.status !== MediaStatus.AVAILABLE &&
+          i.mediaInfo?.status !== MediaStatus.PARTIALLY_AVAILABLE)
     );
   }
 
-  if (settings.currentSettings.hideBlacklisted) {
+  if (settings.currentSettings.hideBlocklisted) {
     titles = titles.filter(
       (t) =>
         (t.mediaType === 'movie' || t.mediaType === 'tv') &&
         t.mediaInfo?.status !== MediaStatus.BLACKLISTED
+      (i) =>
+        !(i.mediaType === 'movie' || i.mediaType === 'tv') ||
+        i.mediaInfo?.status !== MediaStatus.BLOCKLISTED
     );
   }
 
@@ -148,6 +155,8 @@ const MediaSlider = ({
   // Blacklist visibility
   const blacklistVisible = hasPermission(
     [Permission.MANAGE_BLACKLIST, Permission.VIEW_BLACKLIST],
+  const blocklistVisibility = hasPermission(
+    [Permission.MANAGE_BLOCKLIST, Permission.VIEW_BLOCKLIST],
     { type: 'or' }
   );
 
@@ -162,6 +171,13 @@ const MediaSlider = ({
         return t.mediaInfo?.status !== MediaStatus.BLACKLISTED;
       }
       return true; // person results untouched
+    .filter((title) => {
+      if (!blocklistVisibility)
+        return (
+          (title as TvResult | MovieResult).mediaInfo?.status !==
+          MediaStatus.BLOCKLISTED
+        );
+      return title;
     })
     .map((t) => {
       switch (t.mediaType) {

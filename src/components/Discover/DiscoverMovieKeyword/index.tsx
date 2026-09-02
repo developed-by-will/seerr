@@ -6,6 +6,7 @@ import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import globalMessages from '@app/i18n/globalMessages';
 import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
+import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
 import type { TmdbKeyword } from '@server/api/themoviedb/interfaces';
 import type { MovieResult } from '@server/models/Search';
@@ -44,7 +45,7 @@ const DiscoverMovieKeyword = () => {
   });
 
   if (error) {
-    return <Error statusCode={500} />;
+    return <ErrorPage statusCode={500} />;
   }
 
   const title = isLoadingInitialData
@@ -58,7 +59,7 @@ const DiscoverMovieKeyword = () => {
   return (
     <>
       <PageTitle title={title} />
-      <div className="mt-1 mb-5">
+      <div className="mb-5 mt-1">
         <Header>{title}</Header>
       </div>
       <ListView

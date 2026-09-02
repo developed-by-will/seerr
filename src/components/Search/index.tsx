@@ -5,6 +5,7 @@ import useDiscover from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
+import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
 import type {
   MovieResult,
@@ -36,7 +37,7 @@ const Search = () => {
     {
       query: router.query.query,
     },
-    { hideAvailable: false, hideBlacklisted: false }
+    { hideAvailable: false, hideBlocklisted: false }
   );
 
   const filteredTitles = useFilterByLanguages({
@@ -47,13 +48,13 @@ const Search = () => {
   });
 
   if (error) {
-    return <Error statusCode={500} />;
+    return <ErrorPage statusCode={500} />;
   }
 
   return (
     <>
       <PageTitle title={intl.formatMessage(messages.search)} />
-      <div className="mt-1 mb-5">
+      <div className="mb-5 mt-1">
         <Header>{intl.formatMessage(messages.searchresults)}</Header>
       </div>
       <ListView
