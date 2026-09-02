@@ -11,7 +11,6 @@ import FilterSlideover from '@app/components/Discover/FilterSlideover';
 import useDiscover from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import { useUpdateQueryParams } from '@app/hooks/useUpdateQueryParams';
-import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
 import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';

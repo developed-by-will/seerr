@@ -3,7 +3,6 @@ import ListView from '@app/components/Common/ListView';
 import PageTitle from '@app/components/Common/PageTitle';
 import useDiscover from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
-import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
 import globalMessages from '@app/i18n/globalMessages';
 import ErrorPage from '@app/pages/_error';

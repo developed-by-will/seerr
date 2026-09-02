@@ -4,7 +4,6 @@ import PageTitle from '@app/components/Common/PageTitle';
 import useDiscover, { encodeURIExtraParams } from '@app/hooks/useDiscover';
 import useFilterByLanguages from '@app/hooks/useFilterByLanguages';
 import globalMessages from '@app/i18n/globalMessages';
-import Error from '@app/pages/_error';
 import { FilterByLanguage } from '@app/types/filters';
 import ErrorPage from '@app/pages/_error';
 import defineMessages from '@app/utils/defineMessages';
