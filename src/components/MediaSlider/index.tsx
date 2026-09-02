@@ -47,8 +47,8 @@ const MediaSlider = ({
   const settings = useSettings();
   const { hasPermission } = useUser();
 
-  let isSeries = !sliderKey ? url.includes('tv') : true;
-  let isMovies = !sliderKey ? url.includes('movie') : true;
+  let isSeries = url.includes('tv');
+  let isMovies = url.includes('movie');
 
   const { data, error, setSize, size } = useSWRInfinite<MixedResult>(
     (pageIndex: number, previousPageData: MixedResult | null) => {
@@ -90,7 +90,7 @@ const MediaSlider = ({
 
   useEffect(() => {
     if (
-      titles.length < 24 &&
+      filteredTitles.length < 24 &&
       size < 5 &&
       (data?.[0]?.totalResults ?? 0) > size * 20
     ) {
@@ -163,7 +163,7 @@ const MediaSlider = ({
     key: getKey(),
   });
 
-  if (hideWhenEmpty && (data?.[0].results ?? []).length === 0) {
+  if (hideWhenEmpty && filteredTitles.length === 0) {
     return null;
   }
 
@@ -219,6 +219,7 @@ const MediaSlider = ({
         case 'person':
           return (
             <PersonCard
+              key={title.id}
               personId={title.id}
               name={title.name}
               profilePath={title.profilePath}
@@ -227,11 +228,11 @@ const MediaSlider = ({
       }
     });
 
-  if (linkUrl && titles.length > 20) {
+  if (linkUrl && filteredTitles.length > 20) {
     finalTitles.push(
       <ShowMoreCard
         url={linkUrl}
-        posters={titles
+        posters={filteredTitles
           .slice(20, 24)
           .map((title) =>
             title.mediaType !== 'person' ? title.posterPath : undefined
